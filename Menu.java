@@ -10,17 +10,17 @@ import java.util.List;
 
 public class Menu {
 
-  public static String currentUserGlobal = "";
-  public static double CADBal = 0.00;
-  public static ArrayList<Double> cryptoBal = new ArrayList<Double>();
+  private static String currentUserGlobal = "";
+  private static double CADBal = 0.00;
+  private static ArrayList<Double> cryptoBal = new ArrayList<Double>();
 
   public static void initalizeBalances(String currentUser){
 
     String line = "";
     currentUserGlobal = currentUser;
+
     //Getting CAD balance from balCAD.csv
-    try{
-      BufferedReader br = new BufferedReader(new FileReader("balCAD.csv"));
+    try (BufferedReader br = new BufferedReader(new FileReader("balCAD.csv"))){
       while((line = br.readLine()) != null){
         String[] values = line.split(",");
         if(values[0].equals(currentUser)){
@@ -32,8 +32,7 @@ public class Menu {
     }
 
     //Getting Crypto balances from balCrypto.csv
-    try{
-      BufferedReader br = new BufferedReader(new FileReader("balCrypto.csv"));
+    try (BufferedReader br = new BufferedReader(new FileReader("balCrypto.csv"))){
       while((line = br.readLine()) != null){
         String[] values = line.split(",");
         if(values[0].equals(currentUser)){
@@ -51,16 +50,14 @@ public class Menu {
 
   private static void menu() {
 
-    // Main login = new Main();
-    // currentUser = login.currentUser;
-
     Scanner myObj = new Scanner(System.in);
-    System.out.println("\nYou have $" + CADBal + " CAD\n " + cryptoBal.get(0) + "₿ Bitcoin, " + cryptoBal.get(1)
-        + "Ξ Ethereum, " + cryptoBal.get(2) + "◎ Solana");
+    System.out.println("\n---Current Balances---\nYou have $" + CADBal + " CAD");
+    System.out.println("\n" + cryptoBal.get(0) + "₿ Bitcoin, " + cryptoBal.get(1) + "Ξ Ethereum, " + cryptoBal.get(2) + "◎ Solana");
     System.out.println("\nPlease pick an option:");
     System.out.println("[1]Buy\n[2]Sell\n[3]Quit");
     int choice = myObj.nextInt();
 
+    // Asking the user for desired action and taking them to respective menu
     switch (choice) {
       case 1:
         buy();
@@ -70,18 +67,21 @@ public class Menu {
         break;
       case 3:
         quit();
+        break;
+      default:
+        System.out.println("Invalid entry, please try again");
+        menu();
+        break;
     }
   }
 
-  // Our method that lets users buy
+  // Method that lets users simulate buying cryptocurrencies
   private static void buy(){
 
-    // Telling the user current prices
-    System.out.println("Here are the current market prices");
-    Price priceClass = new Price();
-    // do to api limitations, need to edit so it only calls api once per menu load and stores values
-
-    double[] prices = priceClass.getPrice();
+    // Giving user current market prices of cryptocurrencies
+    System.out.println("\n---Here are the current market prices---");
+    System.out.println("Price data by CoinGecko");
+    double[] prices = Price.getPrice();
     double BTC = prices[0];
     double ETH = prices[1];
     double SOL = prices[2];
@@ -94,27 +94,30 @@ public class Menu {
     int choice = myObj.nextInt();
     String buyingCrypto = "";
 
-    int cryptoId = 0;
     switch(choice){
       case 1:
         buyingCrypto = "BTC";
-        cryptoId = 1;
         break;
       case 2:
         buyingCrypto = "ETH";
-        cryptoId = 2;
         break;
       case 3:
         buyingCrypto = "SOL";
-        cryptoId = 3;
         break;
       case 4:
         quit();
+        break;
+      default:
+        System.out.println("Invalid entry, please try again");
+        buy();
+        break;
     }
 
+    // Letting user buy crypto depending on how much CAD they want to spend
     System.out.print("\nPlease input how much CAD value of how much " + buyingCrypto +" you want to buy: \nPlease format like this: #.## (10.00) "); 
     double buyCADValue = myObj.nextDouble(); 
 
+    // Checking if the user has enough CAD for transaction
     if (buyCADValue > CADBal) {
       System.out.println("\nYou do not have enough CAD to make this purchase. Please try again.");
       menu();
@@ -127,11 +130,8 @@ public class Menu {
       cryptoBal.set(1, cryptoBal.get(1) + (buyingCrypto == "ETH" ? buyAmmount : 0.0));
       cryptoBal.set(2, cryptoBal.get(2) + (buyingCrypto == "SOL" ? buyAmmount : 0.0));
       CADBal -= buyCADValue; 
-      
-      System.out.println("\nYou have $" + CADBal + " CAD\n " + cryptoBal.get(0) + "₿ Bitcoin, " + cryptoBal.get(1)
-          + "Ξ Ethereum, " + cryptoBal.get(2) + "◎ Solana");
-      System.out.println("\nPlease pick an option:");
-      System.out.println("[1]Buy\n[2]Sell\n[3]Quit");
+
+      System.out.println("\nYou have $" + CADBal + " CAD\n " + cryptoBal.get(0) + "₿ Bitcoin, " + cryptoBal.get(1) + "Ξ Ethereum, " + cryptoBal.get(2) + "◎ Solana");
       menu();
     }
   }
@@ -139,9 +139,9 @@ public class Menu {
 
   private static void sell() {
 
-    System.out.println("Here are the current market prices");
-    Price priceClass = new Price();
-    double[] prices = priceClass.getPrice();
+    System.out.println("---Here are the current market prices---");
+    System.out.println("Prices data by CoinGecko");
+    double[] prices = Price.getPrice();
     double BTC = prices[0];
     double ETH = prices[1];
     double SOL = prices[2];
@@ -154,27 +154,29 @@ public class Menu {
     int choice = myObj.nextInt();
     String sellingCrypto = "";
 
-    int cryptoId = 0;
-
     switch (choice) {
       case 1:
         sellingCrypto = "BTC";
-        cryptoId = 1;
         break;
       case 2:
         sellingCrypto = "ETH";
-        cryptoId = 2;
         break;
       case 3:
         sellingCrypto = "SOL";
-        cryptoId = 3;
         break;
       case 4:
         quit();
+        break;
+      default:
+        System.out.println("Invalid entry, please try again");
+        sell();
+        break;
     }
-    // fix from selling CAD to selling crypto ammount
+    // Let user sell based on amount of crypto
     System.out.print("\nPlease input how much " + sellingCrypto + " you want to sell: \nPlease format like this: #.## (10.00) ");
     double sellCryptoAmount = myObj.nextDouble();
+
+    // Checking if user has enough crypto to sell
     if (sellCryptoAmount > (sellingCrypto == "BTC" ? cryptoBal.get(0) : (sellingCrypto == "ETH" ? cryptoBal.get(1) : cryptoBal.get(2)))) {
       System.out.println("\nYou do not have enough " + sellingCrypto + " to make this sale. Please try again.");
       menu();
@@ -193,52 +195,51 @@ public class Menu {
 
   private static void quit(){
     System.out.println("Exiting simulator... \n\nSee you again soon!");
-    try{
-      List<String> cadLines = new ArrayList<String>();
-      BufferedReader br = new BufferedReader(new FileReader("balCAD.csv"));
-      String line = "";
+
+    List<String> cadLines = new ArrayList<String>();
+    String line = "";
+
+    // Saving CAD balance after leaving sim
+    try (BufferedReader br = new BufferedReader(new FileReader("balCAD.csv"))){
       while((line = br.readLine()) != null){
           String[] values = line.split(",");
           if (values[0].equals(currentUserGlobal)) {
             line = currentUserGlobal + "," + CADBal;
           }
           cadLines.add(line);
-      } try{
-        PrintWriter myWriter = new PrintWriter(new BufferedWriter(new FileWriter("balCAD.csv", false)));
-        for(String cadLine : cadLines){
-          myWriter.write(cadLine + "\n");
-        }
-        myWriter.close();
-      } catch(IOException e){
-        e.printStackTrace();
-      }
-    }
-    catch(IOException e){
+      } 
+    } catch(IOException e){
       e.printStackTrace();
-  }
-  try{
-      List<String> cryptoLines = new ArrayList<String>();
-      BufferedReader br2 = new BufferedReader(new FileReader("balCrypto.csv"));
-      String line = "";
+    }
+    try (PrintWriter myWriter = new PrintWriter(new BufferedWriter(new FileWriter("balCAD.csv", false)))){
+      for(String cadLine : cadLines){
+        myWriter.write(cadLine + "\n");
+      }
+    } catch(IOException e){
+      e.printStackTrace();
+    }
+
+    // Saving crypto balance after leaving sim
+    List<String> cryptoLines = new ArrayList<String>();
+    
+    try (BufferedReader br2 = new BufferedReader(new FileReader("balCrypto.csv"))){
       while((line = br2.readLine()) != null){
           String[] values = line.split(",");
           if (values[0].equals(currentUserGlobal)) {
             line = currentUserGlobal + "," + cryptoBal.get(0) + "," + cryptoBal.get(1) + "," + cryptoBal.get(2);
           }
           cryptoLines.add(line);
-      } try{
-        PrintWriter myWriter = new PrintWriter(new BufferedWriter(new FileWriter("balCrypto.csv", false)));
-        for(String l : cryptoLines){
-          myWriter.write(l + "\n");
-        }
-        myWriter.close();
-      } catch(IOException e){
-        e.printStackTrace();
-      }
-    }
-    catch(IOException e){
+      } 
+    } catch(IOException e){
       e.printStackTrace();
-  }
+    }
+
+    try (PrintWriter myWriter = new PrintWriter(new BufferedWriter(new FileWriter("balCrypto.csv", false)))){
+      for(String l : cryptoLines){
+        myWriter.write(l + "\n");
+      }
+    } catch(IOException e){
+      e.printStackTrace();
+    }
 }
 }
-// https://www.geeksforgeeks.org/convert-string-to-double-in-java/
